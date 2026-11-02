@@ -5,6 +5,7 @@ import { stripHtmlValidation } from '@gitroom/helpers/utils/strip.html.validatio
 import { textSlicer } from '@gitroom/helpers/utils/count.length';
 import { FC } from 'react';
 import { VideoOrImage } from '@gitroom/react/helpers/video.or.image';
+import { hasExtension } from '@gitroom/helpers/utils/has.extension';
 import { SliderComponent } from '@gitroom/frontend/components/third-parties/slider.component';
 
 export const InstagramPreview: FC<{
@@ -69,7 +70,12 @@ export const InstagramPreview: FC<{
             <a
               key={`image_${index}`}
               className="flex-1"
-              href={mediaDir.set(image.path)}
+              href={
+                // a link around a video with controls opens it in a new tab on every control click
+                hasExtension(image.path, 'mp4')
+                  ? undefined
+                  : mediaDir.set(image.path)
+              }
               target="_blank"
             >
               <VideoOrImage autoplay={true} src={mediaDir.set(image.path)} />

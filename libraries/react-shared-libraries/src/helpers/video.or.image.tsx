@@ -15,6 +15,7 @@ export const VideoOrImage: FC<{
         src={src}
         autoPlay={autoplay}
         className={clsx('w-full h-full', videoClassName)}
+        controls
         muted={true}
         loop={true}
       />

@@ -6,6 +6,7 @@ import { textSlicer } from '@gitroom/helpers/utils/count.length';
 import { FC, ReactNode } from 'react';
 import { SliderComponent } from '@gitroom/frontend/components/third-parties/slider.component';
 import { VideoOrImage } from '@gitroom/react/helpers/video.or.image';
+import { hasExtension } from '@gitroom/helpers/utils/has.extension';
 
 const TikTokItem: FC<{ icon: ReactNode; num: string }> = ({ icon, num }) => {
   return (
@@ -64,7 +65,12 @@ export const TiktokPreview: FC<{
             <a
               key={`image_${index}`}
               className="flex-1"
-              href={mediaDir.set(image.path)}
+              href={
+                // a link around a video with controls opens it in a new tab on every control click
+                hasExtension(image.path, 'mp4')
+                  ? undefined
+                  : mediaDir.set(image.path)
+              }
               target="_blank"
             >
               <VideoOrImage autoplay={true} src={mediaDir.set(image.path)} />

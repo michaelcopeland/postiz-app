@@ -8,6 +8,7 @@ import { getPresetBackground } from '@gitroom/frontend/components/new-launch/pro
 import { FC } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
 import { VideoOrImage } from '@gitroom/react/helpers/video.or.image';
+import { hasExtension } from '@gitroom/helpers/utils/has.extension';
 
 const Icons = () => {
   return (
@@ -175,7 +176,12 @@ export const FacebookPreview: FC<{
             <a
               key={`image_${index}`}
               className="flex-1"
-              href={mediaDir.set(image.path)}
+              href={
+                // a link around a video with controls opens it in a new tab on every control click
+                hasExtension(image.path, 'mp4')
+                  ? undefined
+                  : mediaDir.set(image.path)
+              }
               target="_blank"
             >
               <VideoOrImage autoplay={true} src={mediaDir.set(image.path)} />
@@ -309,7 +315,12 @@ export const FacebookPreview: FC<{
                           <a
                             key={`image_${index}`}
                             className="flex-1"
-                            href={mediaDir.set(image.path)}
+                            href={
+                              // a link around a video with controls opens it in a new tab on every control click
+                              hasExtension(image.path, 'mp4')
+                                ? undefined
+                                : mediaDir.set(image.path)
+                            }
                             target="_blank"
                           >
                             <VideoOrImage
