@@ -15,9 +15,11 @@ const hasChild = (node: any, tag: string): boolean =>
 
 const addClass = (html: string, tag: string, className: string) =>
   html.replace(new RegExp(`<${tag}(\\s[^>]*)?>`), (open, attrs = '') =>
-    / class="/.test(attrs)
-      ? open.replace(/ class="/, ` class="${className} `)
-      : `<${tag}${attrs} class="${className}">`
+    open.includes(className)
+      ? open
+      : / class="/.test(attrs)
+        ? open.replace(/ class="/, ` class="${className} `)
+        : `<${tag}${attrs} class="${className}">`
   );
 
 const block = (name: string, html: string, attrs?: object) =>

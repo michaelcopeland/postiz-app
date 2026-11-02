@@ -172,7 +172,8 @@ export const stripHtmlValidation = (
       'strong',
       'u',
       'a',
-      ...(inlineImages ? ['img'] : []),
+      // article channels: pictures, with their captions, and videos
+      ...(inlineImages ? ['img', 'figure', 'figcaption', 'video', 'em'] : []),
       ]
     )
       .replace(/&gt;/gi, '>')
