@@ -47,6 +47,7 @@ import Text from '@tiptap/extension-text';
 import Paragraph from '@tiptap/extension-paragraph';
 import Underline from '@tiptap/extension-underline';
 import { stripHtmlValidation } from '@gitroom/helpers/utils/strip.html.validation';
+import { sanitizePostContent } from '@gitroom/helpers/utils/sanitize.post.content';
 import { History } from '@tiptap/extension-history';
 import { BulletList, ListItem } from '@tiptap/extension-list';
 import { Bullets } from '@gitroom/frontend/components/new-launch/bullets.component';
@@ -119,6 +120,45 @@ const EditorImage = Node.create({
 
   renderHTML({ HTMLAttributes }) {
     return ['img', HTMLAttributes];
+  },
+});
+
+// a picture with its caption, or a video, kept exactly as written (the
+// composer has no tools for them, but an article written elsewhere and
+// opened here must not lose them when it is saved again)
+const EditorMedia = Node.create({
+  name: 'media',
+  group: 'block',
+  atom: true,
+  draggable: true,
+  priority: 60,
+
+  addAttributes() {
+    return { html: { default: '' } };
+  },
+
+  parseHTML() {
+    return [
+      {
+        tag: 'figure',
+        getAttrs: (el) => ({
+          html: sanitizePostContent((el as HTMLElement).outerHTML),
+        }),
+      },
+      {
+        tag: 'video',
+        getAttrs: (el) => ({
+          html: sanitizePostContent((el as HTMLElement).outerHTML),
+        }),
+      },
+    ];
+  },
+
+  renderHTML({ node }) {
+    const template = document.createElement('template');
+    template.innerHTML = sanitizePostContent(node.attrs.html);
+    return (template.content.firstElementChild ||
+      document.createElement('figure')) as HTMLElement;
   },
 });
 
@@ -1327,6 +1367,7 @@ export const OnlyEditor = forwardRef<
       ...(inlineImages
         ? [
             EditorImage,
+            EditorMedia,
             Dropcursor.configure({
               color: 'var(--new-btn-primary)',
               width: 2,

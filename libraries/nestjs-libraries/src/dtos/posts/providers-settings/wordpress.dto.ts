@@ -1,5 +1,6 @@
 import {
   IsArray,
+  IsDateString,
   IsDefined,
   IsIn,
   IsNumber,
@@ -40,4 +41,9 @@ export class WordpressDto {
   @IsString()
   @IsIn(['publish', 'draft', 'pending', 'private'])
   status?: string;
+
+  // the date the post shows on WordPress, for publishing it backdated
+  @IsOptional()
+  @IsDateString()
+  date?: string;
 }

@@ -25,6 +25,13 @@ const WordpressSettings: FC = () => {
         <option value="pending">Pending</option>
         <option value="private">Private</option>
       </Select>
+      <Input
+        label="Backdate to (UTC, optional)"
+        type="datetime-local"
+        {...form.register('date', {
+          setValueAs: (v: string) => (v ? `${v}:00.000Z` : undefined),
+        })}
+      />
       <WordpressTerms
         label="Categories"
         func="categoriesList"

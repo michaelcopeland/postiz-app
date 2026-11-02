@@ -10,6 +10,7 @@ import { Integration } from '@prisma/client';
 import { makeSecureId } from '@gitroom/nestjs-libraries/services/make.secure.id';
 import { WordpressDto } from '@gitroom/nestjs-libraries/dtos/posts/providers-settings/wordpress.dto';
 import slugify from 'slugify';
+import { toWordpressBlocks } from '@gitroom/nestjs-libraries/integrations/social/wordpress.blocks';
 // import FormData from 'form-data';
 import { Tool } from '@gitroom/nestjs-libraries/integrations/tool.decorator';
 import { Rules } from '@gitroom/nestjs-libraries/chat/rules.description.decorator';
@@ -320,9 +321,14 @@ export class WordpressProvider
           method: 'POST',
           headers: {
             Authorization: `Basic ${auth}`,
-            'Content-Disposition': `attachment; filename="${postDetails[0].settings.main_image.path
-              .split('/')
-              .pop()}"`,
+            // named after the post, not the upload's random name: search
+            // engines read an image's file name
+            'Content-Disposition': `attachment; filename="${slugify(
+              postDetails[0].settings.title || 'cover',
+              { lower: true, strict: true, trim: true }
+            )}.${(
+              postDetails[0].settings.main_image.path.split('.').pop() || 'jpg'
+            ).toLowerCase()}"`,
             'Content-Type': blob.type,
             'User-Agent': WORDPRESS_USER_AGENT,
           },
@@ -331,6 +337,20 @@ export class WordpressProvider
       ).json();
 
       mediaId = mediaResponse.id;
+
+      if (mediaId && postDetails[0].settings.main_image.alt) {
+        await this.fetch(`${body.domain}/wp-json/wp/v2/media/${mediaId}`, {
+          method: 'POST',
+          headers: {
+            Authorization: `Basic ${auth}`,
+            'Content-Type': 'application/json',
+            'User-Agent': WORDPRESS_USER_AGENT,
+          },
+          body: JSON.stringify({
+            alt_text: postDetails[0].settings.main_image.alt,
+          }),
+        });
+      }
     }
 
     const categories = (postDetails?.[0]?.settings?.categories || [])
@@ -352,13 +372,19 @@ export class WordpressProvider
           method: 'POST',
           body: JSON.stringify({
             title: postDetails?.[0]?.settings?.title,
-            content: postDetails?.[0]?.message,
+            content: toWordpressBlocks(postDetails?.[0]?.message),
             slug: slugify(postDetails?.[0]?.settings?.title, {
               lower: true,
               strict: true,
               trim: true,
             }),
             status: postDetails?.[0]?.settings?.status || 'publish',
+            // a date in the past backdates the post; a future one would make
+            // WordPress schedule it a second time, so it is left out
+            ...(postDetails?.[0]?.settings?.date &&
+            dayjs(postDetails[0].settings.date).isBefore(dayjs())
+              ? { date_gmt: dayjs(postDetails[0].settings.date).toISOString() }
+              : {}),
             ...(categories.length ? { categories } : {}),
             ...(tags.length ? { tags } : {}),
             ...(mediaId ? { featured_media: mediaId } : {}),
